@@ -6,10 +6,19 @@ use App\Models\Event;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AttendeeResource;
 use App\Models\Attendee;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class AttendeeController extends Controller
 {
+
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth:sanctum', except: ['index','show']),
+        ];
+    }
     
     public function index(Event $event)
     {
@@ -39,6 +48,9 @@ class AttendeeController extends Controller
 
     public function destroy(string $event, Attendee $attendee)
     {
+        if (Gate::denies('delete-event', $event)) {
+            abort(403, 'You are not authorized to update this event.');
+        }
         $attendee->delete();
 
         return response(status: 204);
